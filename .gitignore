@@ -1,2 +1,3 @@
 .idea
 __pycache__/**
+data/students.json #to respect the students privacy, the version displayed on git is a simplified version
