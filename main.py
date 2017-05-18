@@ -3,6 +3,7 @@ from kivy.app import App
 from kivy.properties import ObjectProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 
 class Skill(object):
@@ -19,6 +20,22 @@ class Student(object):
         self.student_name = kwargs.get('name')
         self.student_surname = kwargs.get('surname')
         self.student_class = kwargs.get('class')
+
+
+class StartScreen(Screen):
+    pass
+
+
+class SkillsScreen(Screen):
+    pass
+
+
+class BehaviourScreen(Screen):
+    pass
+
+
+class Manager(ScreenManager):
+    pass
 
 
 class Root(BoxLayout):

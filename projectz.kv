@@ -1,83 +1,77 @@
 #:kivy 1.9.1
 
 
-
 <StandardButton@Button>:
     size_hint: None, None
-    height: '35dp'
-    font_size: '20sp'
-    width: '250dp'
+    height: "35dp"
+    font_size: "20sp"
+    width: "250dp"
     background_color: 1, 1, 1, 0.7
     border: 7, 0, 0, 0
 
 
-
 <Root>:
-    orientation: 'vertical'
+    orientation: "vertical"
     canvas:
         Rectangle:
             pos: self.pos
             size: self.size
-            source: 'images/projectz.jpg'
+            source: "images/projectz.jpg"
 
     ActionBar:
         ActionView:
             ActionPrevious:
                 title: ""
                 with_previous: False
+
             ActionOverflow:
                 ActionButton:
                     text: "Settings"
                     on_press: app.open_settings()
-    ScreenManager:
+
+    Manager:
         id: screen_manager
+
         StartScreen:
             name: "start_screen"
 
+        SkillsScreen:
+            name: "skills_screen"
 
 
-<StartScreen@Screen>:
-    padding: '1dp', '1dp'
+<StartScreen>:
+    padding: "1dp", "1dp"
+
     BoxLayout:
-        orientation: 'vertical'
+        orientation: "vertical"
         size_hint: None, .8
-        pos_hint: {'center_x': .5, 'top': 1}
-        width: '250dp'
-        spacing: '5dp'
+        pos_hint: {"center_x": .5, "top": 1}
+        width: "250dp"
+        spacing: "5dp"
+
         StandardButton:
-            text: 'afficher évaluations'
+            text: "afficher évaluations"
             #on_release: display_label.text=root.parent.format_students_skills()
+
         StandardButton:
-            text: 'afficher comportements'
+            text: "afficher comportements"
             #on_release: display_label.text=root.parent.format_students_behaviour()
+
         StandardButton:
-            text: 'tirer au sort'
+            text: "tirer au sort"
             #on_release: root.random_pick_popup(display_label)
+
         StandardButton:
-            text: 'changer de classe'
+            text: "changer de classe"
             #on_release: root.open_class_popup(None)
+
         Label:
             id: active_class
             text: ""
             size_hint_y: None
-            height: '30dp'
+            height: "30dp"
+
         Label:
             id: display_label
             background_color: 1, 1, 1, .3
-            text: ''
-
-    BoxLayout:
-        orientation: 'vertical'
-        size_hint: None, None
-        pos_hint: {'center_x': .5, 'bottom': 0}
-        width: '250dp'
-        spacing: '5dp'
-        StandardButton:
-            text: 'Exporter les données'
-            #on_release: display_label.text = root.root_instance.gather_data()
-        StandardButton:
-            text: 'RAZ des comportements'
-            #on_release: display_label.text = root.root_instance.clear_students_behaviour()
-        StandardButton:
-            text: 'RAZ des compétences'
-            #on_release: display_label.text = root.root_instance.clear_students_skills()
+            text: ""
