@@ -1,2 +1,6 @@
 # ProjectZ
-Kivy app for evaluating students in class
+Kivy app for evaluating students in class.
+I intend to use it to keep track of my students skills.
+# Currently under construction ...
+Don't hesitate to tell me what you think of the code, if it makes sense or not...
+
