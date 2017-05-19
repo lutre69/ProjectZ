@@ -3,7 +3,7 @@ from kivy.app import App
 from kivy.properties import ObjectProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.dropdown import DropDown
 
 
 class Skill(object):
@@ -22,24 +22,16 @@ class Student(object):
         self.student_class = kwargs.get('class')
 
 
-class StartScreen(Screen):
-    pass
-
-
-class SkillsScreen(Screen):
-    pass
-
-
-class BehaviourScreen(Screen):
-    pass
-
-
-class Manager(ScreenManager):
+class DropDownMenu(DropDown):
     pass
 
 
 class Root(BoxLayout):
-    pass
+    dropdown = ObjectProperty()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.dropdown = DropDownMenu()
 
 
 class ProjectZApp(App):
