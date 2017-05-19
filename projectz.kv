@@ -9,18 +9,35 @@
     background_color: 1, 1, 1, 0.7
     border: 7, 0, 0, 0
 
-<DropDownMenu>:
-    on_select: menu.text = "{}".format(args[1])
+<CustomDropDown>:
+    canvas:
+        Rectangle:
+            pos: self.pos
+            size: self.size
+            source: "images/projectz.jpg"
     Button:
-        text: 'First'
-        on_release: root.select('First')
+        text: 'Accueil'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('Accueil')
+
     Button:
-        text: 'Second'
-        on_release: root.select('Second')
+        text: 'Évaluation'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('Évaluation')
+
+    Button:
+        text: 'Comportement'
+        size_hint_y: None
+        height: 44
+        on_release: root.select('Comportement')
 
 
 
 <Root>:
+    _screen_manager: _screen_manager_id
+
     orientation: "vertical"
     canvas:
         Rectangle:
@@ -29,24 +46,22 @@
             source: "images/projectz.jpg"
 
     BoxLayout:
-        background_image: "images/empty_b25.png"
         orientation: "horizontal"
         size_hint_y: None
         height: "40dp"
         Label:
             size_hint_x: None
             width: "40dp"
-        Button:
-            id: menu
+        MenuButton:
             text: "Accueil"
-            on_release: root.dropdown.open(self)
+            on_text: root.set_screen(self.text)
         Button:
             size_hint_x: None
             width: "40dp"
             on_press: app.open_settings()
 
     ScreenManager:
-        id: screen_manager
+        id: _screen_manager_id
 
         StartScreen:
             name: "Accueil"
@@ -61,37 +76,40 @@
     padding: "1dp", "1dp"
     BoxLayout:
         orientation: "vertical"
-        size_hint: None, .8
-        pos_hint: {"center_x": .5, "top": 1}
-        width: "250dp"
-        spacing: "10dp"
 
-        Label:
-            id: active_class
-            text: ""
-            size_hint_y: None
-            height: "60dp"
 
-        StandardButton:
-            text: "charger des compétences"
-            #on_release: root.random_pick_popup(display_label)
+        BoxLayout:
+            orientation: "vertical"
+            size_hint: None, .8
+            pos_hint: {"center_x": .5, "top": 1}
+            width: "250dp"
+            spacing: "10dp"
+            Label:
+                id: active_class
+                text: ""
+                size_hint_y: None
+                height: "60dp"
 
-        StandardButton:
-            text: "charger une classe"
-            #on_release: root.open_class_popup(None)
+            StandardButton:
+                text: "charger des compétences"
+                #on_release: root.random_pick_popup(display_label)
 
-        StandardButton:
-            text: "afficher évaluations"
-            #on_release: display_label.text=root.parent.format_students_skills()
+            StandardButton:
+                text: "charger une classe"
+                #on_release: root.open_class_popup(None)
 
-        StandardButton:
-            text: "afficher comportements"
-            #on_release: display_label.text=root.parent.format_students_behaviour()
+            StandardButton:
+                text: "afficher évaluations"
+                #on_release: display_label.text=root.parent.format_students_skills()
 
-        Label:
-            id: display_label
-            background_color: 1, 1, 1, .3
-            text: ""
+            StandardButton:
+                text: "afficher comportements"
+                #on_release: display_label.text=root.parent.format_students_behaviour()
+
+            Label:
+                id: display_label
+                background_color: 1, 1, 1, .3
+                text: ""
 
 <SkillsScreen@Screen>:
     padding: "1dp", "1dp"

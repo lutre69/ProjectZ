@@ -1,9 +1,10 @@
 # coding: utf8
 from kivy.app import App
-from kivy.properties import ObjectProperty, ListProperty
+from kivy.properties import ObjectProperty, ListProperty, StringProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.dropdown import DropDown
+from kivy.uix.button import Button
 
 
 class Skill(object):
@@ -22,16 +23,24 @@ class Student(object):
         self.student_class = kwargs.get('class')
 
 
-class DropDownMenu(DropDown):
+class CustomDropDown(DropDown):
     pass
 
 
-class Root(BoxLayout):
-    dropdown = ObjectProperty()
+class MenuButton(Button):
+    drop_down = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.dropdown = DropDownMenu()
+        self.drop_down = CustomDropDown()
+        self.bind(on_release=self.drop_down.open)
+        self.drop_down.bind(on_select=lambda instance, x: setattr(self, 'text', x))
+
+
+class Root(BoxLayout):
+
+    def set_screen(self, a_screen):
+        self._screen_manager.current = a_screen
 
 
 class ProjectZApp(App):
