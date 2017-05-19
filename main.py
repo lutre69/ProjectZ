@@ -1,6 +1,6 @@
 # coding: utf8
 from kivy.app import App
-from kivy.properties import ObjectProperty, ListProperty, StringProperty
+from kivy.properties import ObjectProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.dropdown import DropDown
@@ -27,20 +27,35 @@ class CustomDropDown(DropDown):
     pass
 
 
+class StandardButton(Button):
+    pass
+
+
 class MenuButton(Button):
     drop_down = ObjectProperty()
+    options_list = ListProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.options_list = ['Accueil', 'Évaluation', 'Comportement']
         self.drop_down = CustomDropDown()
         self.bind(on_release=self.drop_down.open)
-        self.drop_down.bind(on_select=lambda instance, x: setattr(self, 'text', x))
+        self.drop_down.bind(on_select=self.update_menu)
+
+    def update_menu(self, instance, value):
+        setattr(self, 'text', value)
+        instance.clear_widgets()
+        for x in self.options_list:
+            if x != value:
+                button = Button(text=x, size_hint_y=None, height=44)
+                button.bind(on_release=lambda btn: instance.select(btn.text))
+                instance.add_widget(button)
 
 
 class Root(BoxLayout):
 
     def set_screen(self, a_screen):
-        self._screen_manager.current = a_screen
+        self.ids.screen_manager_id.current = a_screen
 
 
 class ProjectZApp(App):
