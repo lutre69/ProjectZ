@@ -1,5 +1,7 @@
 .idea
 __pycache__/**
-
+buildozer.spec
+.buildozer/**
+bin/**
 #to respect the students privacy, the version displayed on git is a simplified version
 data/students.json 
