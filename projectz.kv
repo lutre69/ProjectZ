@@ -1,7 +1,7 @@
 #:kivy 1.9.1
 
 
-<StandardButton>:
+<StandardButton@Button>:
     size_hint: None, None
     height: "40dp"
     font_size: "18sp"
@@ -53,9 +53,15 @@
         orientation: "horizontal"
         size_hint_y: None
         height: "44dp"
-        Label:
+        Button:
             size_hint_x: None
             width: "44dp"
+            canvas:
+                Rectangle:
+                    size: self.size
+                    pos: self.pos
+                    source: "images/ic_school_black_24dp.png"
+            background_color: 1, 1, 1, 0.6
         MenuButton:
             id: menu_button_id
             text: "Accueil"
@@ -116,7 +122,7 @@
                 text: ""
 
 
-<SkillsScreen>:
+<SkillsScreen@Screen>:
     student_name: student_name_id
     skill_name: skill_name_id
     skill_summary: skill_summary_id

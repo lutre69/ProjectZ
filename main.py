@@ -7,7 +7,6 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
-from kivy.uix.screenmanager import Screen
 
 
 class Skill(object):
@@ -28,16 +27,6 @@ class Student(object):
 
 class CustomDropDown(DropDown):
     pass
-
-
-class StandardButton(Button):
-    pass
-
-
-class SkillsScreen(Screen):
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
 
 class SkillsPopupLayout(GridLayout):
