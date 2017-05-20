@@ -33,29 +33,32 @@ class StandardButton(Button):
 
 class MenuButton(Button):
     drop_down = ObjectProperty()
-    options_list = ListProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.options_list = ['Accueil', 'Évaluation', 'Comportement']
         self.drop_down = CustomDropDown()
         self.bind(on_release=self.drop_down.open)
-        self.drop_down.bind(on_select=self.update_menu)
 
-    def update_menu(self, instance, value):
+    def update_menu(self, instance, value, screen_list):
         setattr(self, 'text', value)
         instance.clear_widgets()
-        for x in self.options_list:
+        for x in screen_list:
             if x != value:
-                button = Button(text=x, size_hint_y=None, height=44)
+                button = Button(text=x, size_hint_y=None, height="44dp")
                 button.bind(on_release=lambda btn: instance.select(btn.text))
                 instance.add_widget(button)
 
 
 class Root(BoxLayout):
 
-    def set_screen(self, a_screen):
-        self.ids.screen_manager_id.current = a_screen
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.screen_list = ['Accueil', 'Evaluation', 'Comportement']
+        self.menu.drop_down.bind(on_select=self.select_screen)
+
+    def select_screen(self, instance, value):
+        self.screen_manager.current = value
+        self.menu.update_menu(instance, value, self.screen_list)
 
 
 class ProjectZApp(App):
