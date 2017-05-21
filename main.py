@@ -11,9 +11,10 @@ from kivy.uix.label import Label
 from functools import partial
 import time
 import os
+import json
 
 
-class Skill(object):
+class Skill:
     def __init__(self, skill_id, **kwargs):
         self.skill_id = skill_id
         self.set_name = kwargs.get('set_name')
@@ -21,7 +22,7 @@ class Skill(object):
         self.summary = kwargs.get('summary')
 
 
-class Student(object):
+class Student:
     def __init__(self, student_id, **kwargs):
         self.id_ = student_id
         self.name = kwargs.get('name')
@@ -238,20 +239,24 @@ class ProjectZApp(App):
     def export_data(self, i=0):
         self.root.start_screen.display_header.clear_widgets()
         self.root.start_screen.display_label.clear_widgets()
-        file = 'export_{}.json'.format(i)
-        data = self.data_output
+        file = 'export_{}'.format(i)
+        data = {key: self.data_output[key] for key in self.data_output}
         path = '/'.join([self.user_data_dir, file])
         if os.path.isfile(path):
             i += 1
             self.export_data(i)
         else:
             with open(path, 'w') as file:
-                file.write(str(data))
+                json.dump(data, file)
                 file.close()
-            print('c bon', path)
             label = Label(text="Votre fichier a été exporté avec\n"
-                          "Succès, il est situé en :\n{}".format(path))
+                          "Succès, il est situé en :\n{}\n"
+                          "Les données du téléphone ont été effacées".format(path))
             self.root.start_screen.display_label.add_widget(label)
+            list_keys = {i: key for key in self.data_output}
+            [self.data_output.store_delete(key) for i, key in list_keys.items()]
+            self.data_output._is_changed = True
+            self.data_output.store_sync()
 
     def _on_answer(self, instance, answer):
         if answer == 'yes':

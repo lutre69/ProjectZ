@@ -20,7 +20,7 @@
 
 <DropButton>:
     size_hint_y: None
-    height: "44dp"
+    height: "64dp"
 
 
 <ConfirmPopup>:
@@ -54,10 +54,10 @@
     BoxLayout:
         orientation: "horizontal"
         size_hint_y: None
-        height: "44dp"
+        height: "64dp"
         Button:
             size_hint_x: None
-            width: "44dp"
+            width: "64dp"
             canvas:
                 Rectangle:
                     size: self.size
@@ -69,7 +69,7 @@
             text: "Accueil"
         Button:
             size_hint_x: None
-            width: "44dp"
+            width: "64dp"
             canvas:
                 Rectangle:
                     size: self.size
@@ -101,10 +101,13 @@
         orientation: "vertical"
         BoxLayout:
             pos_hint: {"center_x": .5, "top": 1}
-            size_hint_y: 30
+            size_hint_y: 40
             size_hint_x: None
             orientation: "vertical"
             width: "250dp"
+            Label:
+                size_hint_y: None
+                height: "10dp"
             StandardButton:
                 id: active_class_label_id
                 text: ""
@@ -124,7 +127,7 @@
                 on_release: app.export_data()
         BoxLayout:
             orientation: 'vertical'
-            size_hint_y: 70
+            size_hint_y: 60
             BoxLayout:
                 id: display_header_id
                 size_hint_y: 10
