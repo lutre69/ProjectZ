@@ -41,8 +41,9 @@
 
 <Root>:
     menu: menu_button_id
-    screen_manager: screen_manager_id
+    start_screen: start_screen_id
     skills_screen: skills_screen_id
+    screen_manager: screen_manager_id
     orientation: "vertical"
     canvas:
         Rectangle:
@@ -79,6 +80,7 @@
     ScreenManager:
         id: screen_manager_id
         StartScreen:
+            id: start_screen_id
             name: "Accueil"
 
         SkillsScreen:
@@ -90,6 +92,7 @@
 
 
 <StartScreen@Screen>:
+    display_label: display_label_id
     padding: "1dp", "1dp"
     BoxLayout:
         orientation: "vertical"
@@ -112,14 +115,14 @@
                 #on_release: root.open_class_popup(None)
             StandardButton:
                 text: "afficher evaluations"
-                #on_release: display_label.text=root.parent.format_students_skills()
+                on_release: app.display_skills()
             StandardButton:
                 text: "afficher comportements"
                 #on_release: display_label.text=root.parent.format_students_behaviour()
-            Label:
-                id: display_label
-                background_color: 1, 1, 1, .3
-                text: ""
+        BoxLayout:
+
+            ScrollView:
+                id: display_label_id
 
 
 <SkillsScreen@Screen>:
@@ -132,11 +135,11 @@
         EvalSelectable:
             id: student_name_id
             text: "Eleve"
-            on_release: app.open_student_popup()
+            on_release: app.root.open_student_popup()
         EvalSelectable:
             id: skill_name_id
             text: "Competence"
-            on_release: app.open_skills_popup()
+            on_release: app.root.open_skills_popup()
         Label:
             id: skill_summary_id
             text: ""
