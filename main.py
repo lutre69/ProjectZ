@@ -10,6 +10,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.label import Label
 from functools import partial
 import time
+import os
 
 
 class Skill(object):
@@ -234,12 +235,23 @@ class ProjectZApp(App):
         data = self.skills_data
         return [Skill(id_, **data[id_]) for id_ in data]
 
-    def export_data(self, data, file='export.txt'):
+    def export_data(self, i=0):
+        self.root.start_screen.display_header.clear_widgets()
+        self.root.start_screen.display_label.clear_widgets()
+        file = 'export_{}.json'.format(i)
+        data = self.data_output
         path = '/'.join([self.user_data_dir, file])
-        with open(path, 'w') as file:
-            file.write(data)
-            file.close()
-        return path
+        if os.path.isfile(path):
+            i += 1
+            self.export_data(i)
+        else:
+            with open(path, 'w') as file:
+                file.write(str(data))
+                file.close()
+            print('c bon', path)
+            label = Label(text="Votre fichier a été exporté avec\n"
+                          "Succès, il est situé en :\n{}".format(path))
+            self.root.start_screen.display_label.add_widget(label)
 
     def _on_answer(self, instance, answer):
         if answer == 'yes':
