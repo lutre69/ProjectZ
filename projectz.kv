@@ -19,20 +19,31 @@
 
 
 <DropButton>:
-    canvas.before:
-        Rectangle:
-            pos: self.pos
-            size: self.size
-            source: "images/projectz.jpg"
     size_hint_y: None
     height: "44dp"
-    background_color: 1, 1, 1, 0.6
+
+
+<ConfirmPopup>:
+    cols:1
+	Label:
+		text: root.text
+	GridLayout:
+		cols: 2
+		size_hint_y: None
+		height: '44sp'
+		Button:
+			text: 'Oui'
+			on_release: root.dispatch('on_answer','yes')
+		Button:
+			text: 'Non'
+			on_release: root.dispatch('on_answer', 'no')
 
 
 <Root>:
     menu: menu_button_id
     start_screen: start_screen_id
     skills_screen: skills_screen_id
+    behaviour_screen: behaviour_screen_id
     screen_manager: screen_manager_id
     orientation: "vertical"
     canvas:
@@ -57,7 +68,6 @@
         MenuButton:
             id: menu_button_id
             text: "Accueil"
-            background_color: 1, 1, 1, 0.6
         Button:
             size_hint_x: None
             width: "44dp"
@@ -79,6 +89,7 @@
             name: "Evaluation"
 
         BehaviourScreen:
+            id: behaviour_screen_id
             name: "Comportement"
 
 
@@ -109,7 +120,7 @@
                 on_release: app.display_skills()
             StandardButton:
                 text: "afficher comportements"
-                #on_release: display_label.text=root.parent.format_students_behaviour()
+                on_release: app.display_behaviour()
         BoxLayout:
             orientation: 'vertical'
             size_hint_y: 70
@@ -159,7 +170,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_very_dissatisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.set_student_skill(-2)
+                on_release: app.pre_set_student_skill(-2)
             Button:
                 canvas:
                     Rectangle:
@@ -187,7 +198,32 @@
 
 
 <BehaviourScreen@Screen>:
-    padding: "1dp", "1dp"
+    student_name: student_name_id
+    padding: '1dp', '1dp'
+    EvalSelectable:
+        pos_hint: {'center_x': .5, 'top': 1}
+        id: student_name_id
+        text: "Eleve"
+        on_release: app.root.open_student_popup()
 
     BoxLayout:
-        orientation: "vertical"
+        orientation: 'vertical'
+        size_hint: None, .6
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        width: '250dp'
+        spacing: "10dp"
+        StandardButton:
+            text: 'Bavardage'
+            on_release: app.set_student_disobedience(self.text)
+
+        StandardButton:
+            text: 'Insolence'
+            on_release: app.set_student_disobedience(self.text)
+
+        StandardButton:
+            text: 'Inactivité'
+            on_release: app.set_student_disobedience(self.text)
+
+        StandardButton:
+            text: 'Travail non fait'
+            on_release: app.set_student_disobedience(self.text)
