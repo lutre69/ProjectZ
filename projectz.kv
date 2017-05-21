@@ -2,8 +2,7 @@
 
 
 <StandardButton@Button>:
-    size_hint: None, None
-    height: "40dp"
+    size_hint_x: None
     font_size: "18sp"
     width: "250dp"
     background_color: 1, 1, 1, 0.6
@@ -19,24 +18,15 @@
     border: 15, 0, 0, 0
 
 
-<CustomDropDown>:
-    canvas:
+<DropButton>:
+    canvas.before:
         Rectangle:
             pos: self.pos
             size: self.size
             source: "images/projectz.jpg"
-    Button:
-        text: 'Evaluation'
-        size_hint_y: None
-        height: "44dp"
-        background_color: 1, 1, 1, 0.6
-        on_release: root.select('Evaluation')
-    Button:
-        text: 'Comportement'
-        size_hint_y: None
-        height: "44dp"
-        background_color: 1, 1, 1, 0.6
-        on_release: root.select('Comportement')
+    size_hint_y: None
+    height: "44dp"
+    background_color: 1, 1, 1, 0.6
 
 
 <Root>:
@@ -63,6 +53,7 @@
                     pos: self.pos
                     source: "images/ic_school_black_24dp.png"
             background_color: 1, 1, 1, 0.6
+            on_release: root.clear_display_label()
         MenuButton:
             id: menu_button_id
             text: "Accueil"
@@ -93,26 +84,26 @@
 
 <StartScreen@Screen>:
     display_label: display_label_id
+    display_header: display_header_id
+    active_class_label: active_class_label_id
+    active_skill_set_label: active_skill_set_label_id
     padding: "1dp", "1dp"
     BoxLayout:
         orientation: "vertical"
         BoxLayout:
-            orientation: "vertical"
-            size_hint: None, .8
             pos_hint: {"center_x": .5, "top": 1}
+            size_hint_y: 30
+            size_hint_x: None
+            orientation: "vertical"
             width: "250dp"
-            spacing: "10dp"
-            Label:
-                id: active_class
+            StandardButton:
+                id: active_class_label_id
                 text: ""
-                size_hint_y: None
-                height: "60dp"
+                on_release: app.root.select_class()
             StandardButton:
-                text: "charger des competences"
-                #on_release: root.random_pick_popup(display_label)
-            StandardButton:
-                text: "charger une classe"
-                #on_release: root.open_class_popup(None)
+                id: active_skill_set_label_id
+                text: ""
+                on_release: app.root.select_skill_set()
             StandardButton:
                 text: "afficher evaluations"
                 on_release: app.display_skills()
@@ -120,9 +111,15 @@
                 text: "afficher comportements"
                 #on_release: display_label.text=root.parent.format_students_behaviour()
         BoxLayout:
-
-            ScrollView:
-                id: display_label_id
+            orientation: 'vertical'
+            size_hint_y: 70
+            BoxLayout:
+                id: display_header_id
+                size_hint_y: 10
+            BoxLayout:
+                size_hint_y: 90
+                ScrollView:
+                    id: display_label_id
 
 
 <SkillsScreen@Screen>:
@@ -132,6 +129,7 @@
     padding: "1dp", "1dp"
     BoxLayout:
         orientation: "vertical"
+
         EvalSelectable:
             id: student_name_id
             text: "Eleve"
@@ -142,6 +140,7 @@
             on_release: app.root.open_skills_popup()
         Label:
             id: skill_summary_id
+            padding: "10dp", 0
             text: ""
             color: 1, 1, 1, 1
             font_size: '17sp'

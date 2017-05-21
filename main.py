@@ -1,13 +1,12 @@
 # coding: utf8
 from kivy.app import App
-from kivy.properties import ObjectProperty
+from kivy.properties import ObjectProperty, StringProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
-from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
 
 
@@ -27,8 +26,38 @@ class Student(object):
         self.class_ = kwargs.get('class')
 
 
-class CustomDropDown(DropDown):
-    pass
+class ClassPopupLayout(GridLayout):
+    def __init__(self, root, class_list, **kwargs):
+        super().__init__(**kwargs)
+        self.root = root
+        self.class_list = class_list
+        self.btn_dict = {}
+        for c in self.class_list:
+            button = Button(text=c)
+            self.add_widget(button)
+            button.bind(on_release=self.select)
+            self.btn_dict[button] = c
+
+    def select(self, obj):
+        self.root.active_class = self.btn_dict[obj]
+        self.parent.parent.parent.dismiss()
+
+
+class SkillSetPopupLayout(GridLayout):
+    def __init__(self, root, skill_set_list, **kwargs):
+        super().__init__(**kwargs)
+        self.root = root
+        self.skill_set_list = skill_set_list
+        self.btn_dict = {}
+        for s in self.skill_set_list:
+            button = Button(text=s)
+            self.add_widget(button)
+            button.bind(on_release=self.select)
+            self.btn_dict[button] = s
+
+    def select(self, obj):
+        self.root.active_skill_set = self.btn_dict[obj]
+        self.parent.parent.parent.dismiss()
 
 
 class SkillsPopupLayout(GridLayout):
@@ -70,7 +99,8 @@ class MenuButton(Button):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.drop_down = CustomDropDown()
+        self.drop_down = DropDown()
+        self.update_menu(self.drop_down, 'Accueil', ['Evaluation', 'Comportement'])
         self.bind(on_release=self.drop_down.open)
 
     def update_menu(self, instance, value, screen_list):
@@ -78,34 +108,78 @@ class MenuButton(Button):
         instance.clear_widgets()
         for x in screen_list:
             if x != value:
-                button = Button(text=x, size_hint_y=None, height="44dp",
-                                background_color=[1, 1, 1, 0.6])
+                button = DropButton(text=x)
                 button.bind(on_release=lambda btn: instance.select(btn.text))
                 instance.add_widget(button)
+                button.canvas.ask_update()
+                try:
+                    print(button.canvas.Rectangle)
+                except AttributeError:
+                    pass
 
 
-class StartScreen(Screen):
+class DropButton(Button):
     pass
 
 
 class Root(BoxLayout):
     selected_student = ObjectProperty()
     selected_skill = ObjectProperty()
+    _active_class = StringProperty()
+    _active_skill_set = StringProperty()
+    active_students = ListProperty()
+    active_skills = ListProperty()
 
     def __init__(self, students, skills, **kwargs):
         super().__init__(**kwargs)
         self.student_list = students
         self.skill_list = skills
+        self.active_class = self.student_list[0].class_
+        self.active_skill_set = self.skill_list[0].set_name
+        self.class_list = set([s.class_ for s in self.student_list])
+        self.skill_set_list = set([s.set_name for s in self.skill_list])
         self.screen_list = ['Accueil', 'Evaluation', 'Comportement']
         self.menu.drop_down.bind(on_select=self.select_screen)
+
+    @property
+    def active_class(self):
+        return self._active_class
+
+    @active_class.setter
+    def active_class(self, value):
+        self.active_students = [s for s in self.student_list if s.class_ == value]
+        self.start_screen.active_class_label.text = "Classe : {}".format(value)
+        self._active_class = value
+
+    @property
+    def active_skill_set(self):
+        return self._active_skill_set
+
+    @active_skill_set.setter
+    def active_skill_set(self, value):
+        self.active_skills = [s for s in self.skill_list if s.set_name == value]
+        self.start_screen.active_skill_set_label.text = "Competences : {}".format(value)
+        self._active_skill_set = value
 
     def select_screen(self, instance, value):
         self.screen_manager.current = value
         self.menu.update_menu(instance, value, self.screen_list)
 
+    def select_class(self):
+        Popup(content=ClassPopupLayout(self,
+              self.class_list, cols=2),
+              title='Faites votre choix',
+              size_hint_y=0.2).open()
+
+    def select_skill_set(self):
+        Popup(content=SkillSetPopupLayout(self,
+              self.skill_set_list, cols=2),
+              title='Faites votre choix',
+              size_hint_y=0.2).open()
+
     def open_student_popup(self):
         Popup(content=StudentPopupLayout(self,
-              self.student_list,
+              self.active_students,
               cols=2),
               title='Faites votre choix',
               auto_dismiss=False).open()
@@ -116,7 +190,7 @@ class Root(BoxLayout):
 
     def open_skills_popup(self):
         Popup(content=SkillsPopupLayout(self,
-              self.skill_list,
+              self.active_skills,
               cols=2),
               title='Faites votre choix',
               size_hint_y=0.5).open()
@@ -124,6 +198,10 @@ class Root(BoxLayout):
     def on_selected_skill(self, instance, skill):
         self.skills_screen.skill_name.text = skill.title
         self.skills_screen.skill_summary.text = skill.summary
+
+    def clear_display_label(self):
+        self.start_screen.display_label.clear_widgets()
+        self.start_screen.display_header.clear_widgets()
 
 
 class ProjectZApp(App):
@@ -163,22 +241,23 @@ class ProjectZApp(App):
                     output[student][skill] = {0: value}
                 except KeyError:
                     output[student] = self.students_data[student]
+                    output[student][skill] = {0: value}
             output._is_changed = True
             output.store_sync()
         except AttributeError:
             pass
 
     def display_skills(self):
+        self.root.start_screen.display_header.clear_widgets()
         self.root.start_screen.display_label.clear_widgets()
         output = self.data_output
         data = {}
         header = ["prenom"]
-        header.extend([skill.title for skill in self.root.skill_list])
+        header.extend([skill.title for skill in self.root.active_skills])
+        header_layout = GridLayout(cols=len(header))
+        [header_layout.add_widget(Label(text=item, font_size='12sp')) for item in header]
         grid_layout = GridLayout(cols=len(header), size_hint_y=None)
         grid_layout.bind(minimum_height=grid_layout.setter('height'))
-        [grid_layout.add_widget(Label(text=item[:4], size_hint_y=None,
-                                      height='40dp',
-                                      font_size='12sp')) for item in header]
         for key in output:
             data[key] = output[key]
             try:
@@ -196,6 +275,10 @@ class ProjectZApp(App):
             [grid_layout.add_widget(Label(text=item, size_hint_y=None,
                                           height='40dp',
                                           font_size='12sp')) for item in row]
+        for label in header_layout.children:
+            if label.text != "prenom":
+                label.text = label.text[:4]
+        self.root.start_screen.display_header.add_widget(header_layout)
         self.root.start_screen.display_label.add_widget(grid_layout)
 
     def on_pause(self):
