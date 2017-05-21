@@ -63,7 +63,6 @@
                     size: self.size
                     pos: self.pos
                     source: "images/ic_school_black_24dp.png"
-            background_color: 1, 1, 1, 0.6
             on_release: root.clear_display_label()
         MenuButton:
             id: menu_button_id
@@ -76,7 +75,6 @@
                     size: self.size
                     pos: self.pos
                     source: "images/ic_menu_black_24dp.png"
-            background_color: 1, 1, 1, 0.6
             on_press: app.open_settings()
     ScreenManager:
         id: screen_manager_id
@@ -178,7 +176,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_dissatisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.set_student_skill(-1)
+                on_release: app.pre_set_student_skill(-1)
             Button:
                 canvas:
                     Rectangle:
@@ -186,7 +184,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_satisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.set_student_skill(1)
+                on_release: app.pre_set_student_skill(1)
             Button:
                 canvas:
                     Rectangle:
@@ -194,7 +192,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_very_satisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.set_student_skill(2)
+                on_release: app.pre_set_student_skill(2)
 
 
 <BehaviourScreen@Screen>:
@@ -214,16 +212,16 @@
         spacing: "10dp"
         StandardButton:
             text: 'Bavardage'
-            on_release: app.set_student_disobedience(self.text)
+            on_release: app.pre_set_student_disobedience(self.text)
 
         StandardButton:
             text: 'Insolence'
-            on_release: app.set_student_disobedience(self.text)
+            on_release: app.pre_set_student_disobedience(self.text)
 
         StandardButton:
-            text: 'Inactivité'
-            on_release: app.set_student_disobedience(self.text)
+            text: 'Inactivite'
+            on_release: app.pre_set_student_disobedience(self.text)
 
         StandardButton:
             text: 'Travail non fait'
-            on_release: app.set_student_disobedience(self.text)
+            on_release: app.pre_set_student_disobedience(self.text)

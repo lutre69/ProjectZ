@@ -269,23 +269,20 @@ class ProjectZApp(App):
 
     def set_student_skill(self, value, instance):
         if self.confirm:
+            student = self.root.selected_student.id_
+            output = self.data_output
+            skill = self.root.selected_skill.title
             try:
-                student = self.root.selected_student.id_
-                output = self.data_output
-                skill = self.root.selected_skill.title
+                length = len(output[student][skill])
+                output[student][skill][length] = value
+            except KeyError:
                 try:
-                    length = len(output[student][skill])
-                    output[student][skill][length] = value
+                    output[student][skill] = {0: value}
                 except KeyError:
-                    try:
-                        output[student][skill] = {0: value}
-                    except KeyError:
-                        output[student] = self.students_data[student]
-                        output[student][skill] = {0: value}
-                output._is_changed = True
-                output.store_sync()
-            except AttributeError:
-                pass
+                    output[student] = self.students_data[student]
+                    output[student][skill] = {0: value}
+            output._is_changed = True
+            output.store_sync()
 
     def display_skills(self):
         self.root.start_screen.display_header.clear_widgets()
@@ -321,9 +318,27 @@ class ProjectZApp(App):
         self.root.start_screen.display_header.add_widget(header_layout)
         self.root.start_screen.display_label.add_widget(grid_layout)
 
-    def set_student_disobedience(self, value):
-        time_ = time.strftime("%d %B %H:%M:%S")
+    def pre_set_student_disobedience(self, value):
         try:
+            student = self.root.selected_student
+            content = ConfirmPopup(text="Confirmez la sanction:\n\n{}\n\n"
+                                        "{} {}".format(
+                                         value, student.surname,
+                                         student.name))
+            content.bind(on_answer=self._on_answer)
+            self.confirm_popup = Popup(title="Confirmation",
+                                       content=content,
+                                       size_hint_y=.4,
+                                       auto_dismiss=False)
+            self.confirm_popup.open()
+            go_on = partial(self.set_student_disobedience, value)
+            self.confirm_popup.bind(on_dismiss=go_on)
+        except AttributeError:
+            pass
+
+    def set_student_disobedience(self, value, instance):
+        if self.confirm:
+            time_ = time.strftime("%d %B %H:%M:%S")
             student = self.root.selected_student.id_
             output = self.data_output
             try:
@@ -337,8 +352,6 @@ class ProjectZApp(App):
                     output[student][value] = {0: time_}
             output._is_changed = True
             output.store_sync()
-        except AttributeError:
-            pass
 
     def display_behaviour(self):
         self.root.start_screen.display_header.clear_widgets()
