@@ -1,6 +1,6 @@
 # coding: utf8
 from kivy.app import App
-from kivy.properties import ObjectProperty, StringProperty, ListProperty, BooleanProperty
+from kivy.properties import ObjectProperty, StringProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
@@ -109,13 +109,30 @@ class StudentPopupLayout(GridLayout):
         self.parent.parent.parent.dismiss()
 
 
+class ChoicePopup(GridLayout):
+
+    def __init__(self, labels, **kwargs):
+        super().__init__(**kwargs)
+        self.labels = labels
+        self.register_event_type('on_answer')
+
+        for x in self.labels:
+            dispatch = partial(self.dispatch, 'on_answer', x)
+            self.add_widget(Button(text=x,
+                                   on_release=dispatch))
+
+    def on_answer(self, *args):
+        pass
+
+
 class MenuButton(Button):
     drop_down = ObjectProperty()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.drop_down = DropDown()
-        self.update_menu(self.drop_down, 'Accueil', ['Evaluation', 'Comportement'])
+        self.update_menu(self.drop_down, 'Accueil',
+                         ['Evaluation', 'Comportement'])
         self.bind(on_release=self.drop_down.open)
 
     def update_menu(self, instance, value, screen_list):
@@ -140,6 +157,7 @@ class Root(BoxLayout):
     _active_skill_set = StringProperty()
     active_students = ListProperty()
     active_skills = ListProperty()
+    choice_popup = ObjectProperty()
 
     def __init__(self, students, skills, **kwargs):
         super().__init__(**kwargs)
@@ -188,12 +206,33 @@ class Root(BoxLayout):
               title='Faites votre choix',
               size_hint_y=0.2).open()
 
+    def _on_answer(self, item, attribute, item_list,
+                   popup_inst, choice, btn_inst):
+        self.choice_popup.dismiss()
+        for x in item_list:
+            if getattr(x, attribute) == choice:
+                item = x
+        return self.on_selected_student(0, item)
+
     def open_student_popup(self):
-        Popup(content=StudentPopupLayout(self,
-              self.active_students,
-              cols=2),
-              title='Faites votre choix',
-              auto_dismiss=False).open()
+        labels = [s.surname for s in self.active_students]
+        content = ChoicePopup(labels)
+        __on_answer = partial(self._on_answer,
+                              self.selected_student,
+                              'surname',
+                              self.student_list)
+        content.bind(on_answer=__on_answer)
+        self.choice_popup = Popup(title='Choisissez un élève',
+                                  content=content,
+                                  auto_dismiss=False)
+        self.choice_popup.open()
+
+
+        #Popup(content=StudentPopupLayout(self,
+        #      self.active_students,
+        #      cols=2),
+        #      title='Faites votre choix',
+        #      auto_dismiss=False).open()
 
     def on_selected_student(self, instance, student):
         self.skills_screen.student_name.text = "{} {}".format(student.surname,
@@ -222,7 +261,6 @@ class ProjectZApp(App):
     skills_data = ObjectProperty(JsonStore('data/skills.json'))
     data_output = ObjectProperty(JsonStore('data/outputs.json'))
     confirm_popup = ObjectProperty()
-    confirm = BooleanProperty()
 
     def build(self):
         self.root = Root(self.get_students(), self.get_skills())
@@ -250,20 +288,20 @@ class ProjectZApp(App):
                 json.dump(data, file)
                 file.close()
             label = Label(text="Votre fichier a été exporté avec\n"
-                          "Succès, il est situé en :\n{}\n"
-                          "Les données du téléphone ont été effacées".format(path))
+                          "Succès, il est situé en :\n{}\nLes données du"
+                          "téléphone ont été effacées".format(path))
             self.root.start_screen.display_label.add_widget(label)
             list_keys = {i: key for key in self.data_output}
             [self.data_output.store_delete(key) for i, key in list_keys.items()]
             self.data_output._is_changed = True
             self.data_output.store_sync()
 
-    def _on_answer(self, instance, answer):
-        if answer == 'yes':
-            self.confirm = True
-        else:
-            self.confirm = False
+    def _on_answer(self, func, instance, answer):
         self.confirm_popup.dismiss()
+        if answer == 'yes':
+            return func()
+        else:
+            return
 
     def pre_set_student_skill(self, value):
         try:
@@ -273,33 +311,32 @@ class ProjectZApp(App):
                                         "{} {}".format(
                                          skill, value, student.surname,
                                          student.name))
-            content.bind(on_answer=self._on_answer)
+            func = partial(self.set_student_skill, value)
+            __on_answer = partial(self._on_answer, func)
+            content.bind(on_answer=__on_answer)
             self.confirm_popup = Popup(title="Confirmation",
                                        content=content,
                                        size_hint_y=.4,
                                        auto_dismiss=False)
             self.confirm_popup.open()
-            go_on = partial(self.set_student_skill, value)
-            self.confirm_popup.bind(on_dismiss=go_on)
         except AttributeError:
             pass
 
-    def set_student_skill(self, value, instance):
-        if self.confirm:
-            student = self.root.selected_student.id_
-            output = self.data_output
-            skill = self.root.selected_skill.title
+    def set_student_skill(self, value):
+        student = self.root.selected_student.id_
+        output = self.data_output
+        skill = self.root.selected_skill.title
+        try:
+            length = len(output[student][skill])
+            output[student][skill][length] = value
+        except KeyError:
             try:
-                length = len(output[student][skill])
-                output[student][skill][length] = value
+                output[student][skill] = {0: value}
             except KeyError:
-                try:
-                    output[student][skill] = {0: value}
-                except KeyError:
-                    output[student] = self.students_data[student]
-                    output[student][skill] = {0: value}
-            output._is_changed = True
-            output.store_sync()
+                output[student] = self.students_data[student]
+                output[student][skill] = {0: value}
+        output._is_changed = True
+        output.store_sync()
 
     def display_skills(self):
         self.root.start_screen.display_header.clear_widgets()
@@ -309,7 +346,8 @@ class ProjectZApp(App):
         header = ["prenom"]
         header.extend([skill.title for skill in self.root.active_skills])
         header_layout = GridLayout(cols=len(header))
-        [header_layout.add_widget(Label(text=item, font_size='12sp')) for item in header]
+        [header_layout.add_widget(Label(text=item,
+                                        font_size='12sp')) for item in header]
         grid_layout = GridLayout(cols=len(header), size_hint_y=None)
         grid_layout.bind(minimum_height=grid_layout.setter('height'))
         for key in output:
@@ -342,42 +380,43 @@ class ProjectZApp(App):
                                         "{} {}".format(
                                          value, student.surname,
                                          student.name))
-            content.bind(on_answer=self._on_answer)
+            func = partial(self.set_student_disobedience, value)
+            __on_answer = partial(self._on_answer, func)
+            content.bind(on_answer=__on_answer)
             self.confirm_popup = Popup(title="Confirmation",
                                        content=content,
                                        size_hint_y=.4,
                                        auto_dismiss=False)
             self.confirm_popup.open()
-            go_on = partial(self.set_student_disobedience, value)
-            self.confirm_popup.bind(on_dismiss=go_on)
         except AttributeError:
             pass
 
-    def set_student_disobedience(self, value, instance):
-        if self.confirm:
-            time_ = time.strftime("%d %B %H:%M:%S")
-            student = self.root.selected_student.id_
-            output = self.data_output
+    def set_student_disobedience(self, value):
+        time_ = time.strftime("%d %B %H:%M:%S")
+        student = self.root.selected_student.id_
+        output = self.data_output
+        try:
+            length = len(output[student][value])
+            output[student][value][length] = time_
+        except KeyError:
             try:
-                length = len(output[student][value])
-                output[student][value][length] = time_
+                output[student][value] = {0: time_}
             except KeyError:
-                try:
-                    output[student][value] = {0: time_}
-                except KeyError:
-                    output[student] = self.students_data[student]
-                    output[student][value] = {0: time_}
-            output._is_changed = True
-            output.store_sync()
+                output[student] = self.students_data[student]
+                output[student][value] = {0: time_}
+        output._is_changed = True
+        output.store_sync()
 
     def display_behaviour(self):
         self.root.start_screen.display_header.clear_widgets()
         self.root.start_screen.display_label.clear_widgets()
         output = self.data_output
         data = {}
-        header = ["prenom", "Bavardage", "Insolence", "Inactivite", "Travail non fait"]
+        header = ["prenom",
+                  "Bavardage", "Insolence", "Inactivite", "Travail non fait"]
         header_layout = GridLayout(cols=len(header))
-        [header_layout.add_widget(Label(text=item, font_size='12sp')) for item in header]
+        [header_layout.add_widget(Label(text=item,
+                                        font_size='12sp')) for item in header]
         grid_layout = GridLayout(cols=len(header), size_hint_y=None)
         grid_layout.bind(minimum_height=grid_layout.setter('height'))
         for key in output:
