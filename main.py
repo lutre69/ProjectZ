@@ -22,12 +22,17 @@ class Skill:
         self.summary = kwargs.get('summary')
 
 
-class Student:
+class Class:
+    def __init__(self, **kwargs):
+        self.class_ = kwargs.get('class')
+
+
+class Student(Class):
     def __init__(self, student_id, **kwargs):
+        super().__init__(**kwargs)
         self.id_ = student_id
         self.name = kwargs.get('name')
         self.surname = kwargs.get('surname')
-        self.class_ = kwargs.get('class')
 
 
 class ConfirmPopup(GridLayout):
@@ -75,53 +80,18 @@ class SkillSetPopupLayout(GridLayout):
         self.parent.parent.parent.dismiss()
 
 
-class SkillsPopupLayout(GridLayout):
-    def __init__(self, root, skills_list, **kwargs):
-        super().__init__(**kwargs)
-        self.root = root
-        self.skills_list = skills_list
-        self.btn_dict = {}
-        for s in self.skills_list:
-            button = Button(text=s.title)
-            self.add_widget(button)
-            button.bind(on_release=self.select)
-            self.btn_dict[button] = s
-
-    def select(self, obj):
-        self.root.selected_skill = self.btn_dict[obj]
-        self.parent.parent.parent.dismiss()
-
-
-class StudentPopupLayout(GridLayout):
-    def __init__(self, root, student_list, **kwargs):
-        super().__init__(**kwargs)
-        self.root = root
-        self.student_list = student_list
-        self.btn_dict = {}
-        for s in self.student_list:
-            button = Button(text="{} {}".format(s.surname, s.name))
-            self.add_widget(button)
-            button.bind(on_release=self.select)
-            self.btn_dict[button] = s
-
-    def select(self, obj):
-        self.root.selected_student = self.btn_dict[obj]
-        self.parent.parent.parent.dismiss()
-
-
 class ChoicePopup(GridLayout):
+    labels = ListProperty()
 
-    def __init__(self, labels, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.labels = labels
-        self.register_event_type('on_answer')
-
+        self.register_event_type('on_choice')
         for x in self.labels:
-            dispatch = partial(self.dispatch, 'on_answer', x)
+            dispatch = partial(self.dispatch, 'on_choice', x)
             self.add_widget(Button(text=x,
                                    on_release=dispatch))
 
-    def on_answer(self, *args):
+    def on_choice(self, *args):
         pass
 
 
@@ -206,50 +176,54 @@ class Root(BoxLayout):
               title='Faites votre choix',
               size_hint_y=0.2).open()
 
-    def _on_answer(self, item, attribute, item_list,
+    def _on_choice(self, item, attribute, item_list, callback,
                    popup_inst, choice, btn_inst):
         self.choice_popup.dismiss()
         for x in item_list:
             if getattr(x, attribute) == choice:
                 item = x
-        return self.on_selected_student(0, item)
+        return callback(item)
 
     def open_student_popup(self):
         labels = [s.surname for s in self.active_students]
-        content = ChoicePopup(labels)
-        __on_answer = partial(self._on_answer,
+        content = ChoicePopup(labels=labels)
+        __on_choice = partial(self._on_choice,
                               self.selected_student,
                               'surname',
-                              self.student_list)
-        content.bind(on_answer=__on_answer)
+                              self.student_list,
+                              self.select_student)
+        content.bind(on_choice=__on_choice)
         self.choice_popup = Popup(title='Choisissez un élève',
                                   content=content,
                                   auto_dismiss=False)
         self.choice_popup.open()
 
-
-        #Popup(content=StudentPopupLayout(self,
-        #      self.active_students,
-        #      cols=2),
-        #      title='Faites votre choix',
-        #      auto_dismiss=False).open()
-
-    def on_selected_student(self, instance, student):
+    def select_student(self, student):
         self.skills_screen.student_name.text = "{} {}".format(student.surname,
                                                               student.name)
         self.behaviour_screen.student_name.text = "{} {}".format(student.surname,
                                                                  student.name)
+        self.selected_student = student
 
     def open_skills_popup(self):
-        Popup(content=SkillsPopupLayout(self,
-              self.active_skills,
-              cols=2),
-              title='Faites votre choix',
-              size_hint_y=0.5).open()
+        labels = [s.title for s in self.active_skills]
+        content = ChoicePopup(labels=labels)
+        __on_choice = partial(self._on_choice,
+                              self.selected_skill,
+                              'title',
+                              self.skill_list,
+                              self.select_skill)
+        content.bind(on_choice=__on_choice)
+        self.choice_popup = Popup(title='Choisissez une compétence',
+                                  content=content,
+                                  size_hint_y=0.5,
+                                  auto_dismiss=False)
+        self.choice_popup.open()
 
-    def on_selected_skill(self, instance, skill):
+    def select_skill(self, skill):
         self.skills_screen.skill_name.text = skill.title
         self.skills_screen.skill_summary.text = skill.summary
+        self.selected_skill = skill
 
     def clear_display_label(self):
         self.start_screen.display_label.clear_widgets()
@@ -268,7 +242,9 @@ class ProjectZApp(App):
 
     def get_students(self):
         data = self.students_data
-        return [Student(id_, **data[id_]) for id_ in data]
+        students = [Student(id_, **data[id_]) for id_ in data]
+        students.sort(key=lambda x: x.surname)
+        return students
 
     def get_skills(self):
         data = self.skills_data
