@@ -23,16 +23,17 @@ class Skill:
 
 
 class Class:
-    def __init__(self, **kwargs):
-        self.class_ = kwargs.get('class')
+    def __init__(self, class_=None):
+        self.class_ = class_
 
 
-class Student(Class):
+class Student:
     def __init__(self, student_id, **kwargs):
-        super().__init__(**kwargs)
         self.id_ = student_id
         self.name = kwargs.get('name')
         self.surname = kwargs.get('surname')
+        self.class_ = kwargs.get('class')
+        self.class_obj = Class(class_=self.class_)
 
 
 class ConfirmPopup(GridLayout):
@@ -122,6 +123,7 @@ class DropButton(Button):
 
 class Root(BoxLayout):
     selected_student = ObjectProperty()
+    _selected_class = ObjectProperty()
     selected_skill = ObjectProperty()
     _active_class = StringProperty()
     _active_skill_set = StringProperty()
@@ -129,26 +131,27 @@ class Root(BoxLayout):
     active_skills = ListProperty()
     choice_popup = ObjectProperty()
 
-    def __init__(self, students, skills, **kwargs):
+    def __init__(self, students, classes, skills, **kwargs):
         super().__init__(**kwargs)
         self.student_list = students
+        self.class_list = classes
         self.skill_list = skills
-        self.active_class = self.student_list[0].class_
+        self.selected_class = self.class_list[0]
         self.active_skill_set = self.skill_list[0].set_name
-        self.class_list = set([s.class_ for s in self.student_list])
         self.skill_set_list = set([s.set_name for s in self.skill_list])
         self.screen_list = ['Accueil', 'Evaluation', 'Comportement']
         self.menu.drop_down.bind(on_select=self.select_screen)
 
     @property
-    def active_class(self):
-        return self._active_class
+    def selected_class(self):
+        return self._selected_class
 
-    @active_class.setter
-    def active_class(self, value):
-        self.active_students = [s for s in self.student_list if s.class_ == value]
-        self.start_screen.active_class_label.text = "Classe : {}".format(value)
-        self._active_class = value
+    @selected_class.setter
+    def selected_class(self, value):
+        self.active_students = [s for s in self.student_list
+                                if s.class_ == value.class_]
+        self.start_screen.active_class_label.text = "Classe : {}".format(value.class_)
+        self._selected_class = value
 
     @property
     def active_skill_set(self):
@@ -164,11 +167,24 @@ class Root(BoxLayout):
         self.screen_manager.current = value
         self.menu.update_menu(instance, value, self.screen_list)
 
-    def select_class(self):
-        Popup(content=ClassPopupLayout(self,
-              self.class_list, cols=2),
-              title='Faites votre choix',
-              size_hint_y=0.2).open()
+    def open_class_popup(self):
+        labels = [c.class_ for c in self.class_list]
+        content = ChoicePopup(labels=labels)
+        __on_choice = partial(self._on_choice,
+                              self.selected_class,
+                              'class_',
+                              self.class_list,
+                              self.select_class)
+        content.bind(on_choice=__on_choice)
+        self.choice_popup = Popup(title='Choisissez une classe',
+                                  content=content,
+                                  size_hint_y=0.3,
+                                  auto_dismiss=False)
+        self.choice_popup.open()
+
+    def select_class(self, a_class):
+        self.start_screen.active_class_label.text = "{}".format(a_class.class_)
+        self.selected_class = a_class
 
     def select_skill_set(self):
         Popup(content=SkillSetPopupLayout(self,
@@ -237,14 +253,22 @@ class ProjectZApp(App):
     confirm_popup = ObjectProperty()
 
     def build(self):
-        self.root = Root(self.get_students(), self.get_skills())
+        students, classes = self.get_students()
+        self.root = Root(students, classes, self.get_skills())
         return self.root
 
     def get_students(self):
         data = self.students_data
         students = [Student(id_, **data[id_]) for id_ in data]
+        temp_list, classes = [], []
+        for s in students:
+            if s.class_obj.class_ in temp_list:
+                pass
+            else:
+                temp_list.append(s.class_obj.class_)
+                classes.append(s.class_obj)
         students.sort(key=lambda x: x.surname)
-        return students
+        return students, classes
 
     def get_skills(self):
         data = self.skills_data
