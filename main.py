@@ -14,12 +14,18 @@ import os
 import json
 
 
+class SkillSet:
+    def __init__(self, set_name=None):
+        self.set_name = set_name
+
+
 class Skill:
     def __init__(self, skill_id, **kwargs):
         self.skill_id = skill_id
-        self.set_name = kwargs.get('set_name')
         self.title = kwargs.get('title')
         self.summary = kwargs.get('summary')
+        self.set_name = kwargs.get('set_name')
+        self.skill_set_obj = SkillSet(set_name=self.set_name)
 
 
 class Class:
@@ -45,40 +51,6 @@ class ConfirmPopup(GridLayout):
 
     def on_answer(self, *args):
         pass
-
-
-class ClassPopupLayout(GridLayout):
-    def __init__(self, root, class_list, **kwargs):
-        super().__init__(**kwargs)
-        self.root = root
-        self.class_list = class_list
-        self.btn_dict = {}
-        for c in self.class_list:
-            button = Button(text=c)
-            self.add_widget(button)
-            button.bind(on_release=self.select)
-            self.btn_dict[button] = c
-
-    def select(self, obj):
-        self.root.active_class = self.btn_dict[obj]
-        self.parent.parent.parent.dismiss()
-
-
-class SkillSetPopupLayout(GridLayout):
-    def __init__(self, root, skill_set_list, **kwargs):
-        super().__init__(**kwargs)
-        self.root = root
-        self.skill_set_list = skill_set_list
-        self.btn_dict = {}
-        for s in self.skill_set_list:
-            button = Button(text=s)
-            self.add_widget(button)
-            button.bind(on_release=self.select)
-            self.btn_dict[button] = s
-
-    def select(self, obj):
-        self.root.active_skill_set = self.btn_dict[obj]
-        self.parent.parent.parent.dismiss()
 
 
 class ChoicePopup(GridLayout):
@@ -123,22 +95,21 @@ class DropButton(Button):
 
 class Root(BoxLayout):
     selected_student = ObjectProperty()
-    _selected_class = ObjectProperty()
     selected_skill = ObjectProperty()
-    _active_class = StringProperty()
-    _active_skill_set = StringProperty()
+    _selected_class = ObjectProperty()
+    _selected_skill_set = ObjectProperty()
     active_students = ListProperty()
     active_skills = ListProperty()
     choice_popup = ObjectProperty()
 
-    def __init__(self, students, classes, skills, **kwargs):
+    def __init__(self, students, classes, skills, skill_sets, **kwargs):
         super().__init__(**kwargs)
         self.student_list = students
         self.class_list = classes
         self.skill_list = skills
+        self.skill_set_list = skill_sets
         self.selected_class = self.class_list[0]
-        self.active_skill_set = self.skill_list[0].set_name
-        self.skill_set_list = set([s.set_name for s in self.skill_list])
+        self.selected_skill_set = self.skill_set_list[0]
         self.screen_list = ['Accueil', 'Evaluation', 'Comportement']
         self.menu.drop_down.bind(on_select=self.select_screen)
 
@@ -154,43 +125,15 @@ class Root(BoxLayout):
         self._selected_class = value
 
     @property
-    def active_skill_set(self):
-        return self._active_skill_set
+    def selected_skill_set(self):
+        return self._selected_skill_set
 
-    @active_skill_set.setter
-    def active_skill_set(self, value):
-        self.active_skills = [s for s in self.skill_list if s.set_name == value]
-        self.start_screen.active_skill_set_label.text = "Competences : {}".format(value)
-        self._active_skill_set = value
-
-    def select_screen(self, instance, value):
-        self.screen_manager.current = value
-        self.menu.update_menu(instance, value, self.screen_list)
-
-    def open_class_popup(self):
-        labels = [c.class_ for c in self.class_list]
-        content = ChoicePopup(labels=labels)
-        __on_choice = partial(self._on_choice,
-                              self.selected_class,
-                              'class_',
-                              self.class_list,
-                              self.select_class)
-        content.bind(on_choice=__on_choice)
-        self.choice_popup = Popup(title='Choisissez une classe',
-                                  content=content,
-                                  size_hint_y=0.3,
-                                  auto_dismiss=False)
-        self.choice_popup.open()
-
-    def select_class(self, a_class):
-        self.start_screen.active_class_label.text = "{}".format(a_class.class_)
-        self.selected_class = a_class
-
-    def select_skill_set(self):
-        Popup(content=SkillSetPopupLayout(self,
-              self.skill_set_list, cols=2),
-              title='Faites votre choix',
-              size_hint_y=0.2).open()
+    @selected_skill_set.setter
+    def selected_skill_set(self, value):
+        self.active_skills = [s for s in self.skill_list
+                              if s.set_name == value.set_name]
+        self.start_screen.active_skill_set_label.text = "Competences : {}".format(value.set_name)
+        self._selected_skill_set = value
 
     def _on_choice(self, item, attribute, item_list, callback,
                    popup_inst, choice, btn_inst):
@@ -200,19 +143,60 @@ class Root(BoxLayout):
                 item = x
         return callback(item)
 
-    def open_student_popup(self):
-        labels = [s.surname for s in self.active_students]
+    def select_screen(self, instance, value):
+        self.screen_manager.current = value
+        self.menu.update_menu(instance, value, self.screen_list)
+
+    def open_choice_popup(self, item, item_list, attribute, callback,
+                          title='Choisissez', size_hint_y=None):
+        labels = [getattr(x, attribute) for x in item_list]
         content = ChoicePopup(labels=labels)
-        __on_choice = partial(self._on_choice,
-                              self.selected_student,
-                              'surname',
-                              self.student_list,
-                              self.select_student)
+        __on_choice = partial(self._on_choice, item, attribute,
+                              item_list, callback)
         content.bind(on_choice=__on_choice)
-        self.choice_popup = Popup(title='Choisissez un élève',
-                                  content=content,
-                                  auto_dismiss=False)
+        self.choice_popup = Popup(title=title, content=content,
+                                  size_hint_y=size_hint_y, auto_dismiss=False)
         self.choice_popup.open()
+
+    def open_class_popup(self):
+        return self.open_choice_popup(item=self.selected_class,
+                                      item_list=self.class_list,
+                                      attribute='class_',
+                                      callback=self.select_class,
+                                      title='Choisissez une classe',
+                                      size_hint_y=0.3)
+
+    def open_skill_set_popup(self):
+        return self.open_choice_popup(item=self.selected_skill_set,
+                                      item_list=self.skill_set_list,
+                                      attribute='set_name',
+                                      callback=self.select_skill_set,
+                                      title='Choisissez un jeu de compétences',
+                                      size_hint_y=0.3)
+
+    def open_student_popup(self):
+        return self.open_choice_popup(item=self.selected_student,
+                                      item_list=self.active_students,
+                                      attribute='surname',
+                                      callback=self.select_student,
+                                      title='Choisissez un élève',
+                                      size_hint_y=1)
+
+    def open_skills_popup(self):
+        return self.open_choice_popup(item=self.selected_skill,
+                                      item_list=self.active_skills,
+                                      attribute='title',
+                                      callback=self.select_skill,
+                                      title='Choisissez une compétence',
+                                      size_hint_y=0.4)
+
+    def select_class(self, a_class):
+        self.start_screen.active_class_label.text = "{}".format(a_class.class_)
+        self.selected_class = a_class
+
+    def select_skill_set(self, a_set):
+        self.start_screen.active_skill_set_label.text = "{}".format(a_set.set_name)
+        self.selected_skill_set = a_set
 
     def select_student(self, student):
         self.skills_screen.student_name.text = "{} {}".format(student.surname,
@@ -220,21 +204,6 @@ class Root(BoxLayout):
         self.behaviour_screen.student_name.text = "{} {}".format(student.surname,
                                                                  student.name)
         self.selected_student = student
-
-    def open_skills_popup(self):
-        labels = [s.title for s in self.active_skills]
-        content = ChoicePopup(labels=labels)
-        __on_choice = partial(self._on_choice,
-                              self.selected_skill,
-                              'title',
-                              self.skill_list,
-                              self.select_skill)
-        content.bind(on_choice=__on_choice)
-        self.choice_popup = Popup(title='Choisissez une compétence',
-                                  content=content,
-                                  size_hint_y=0.5,
-                                  auto_dismiss=False)
-        self.choice_popup.open()
 
     def select_skill(self, skill):
         self.skills_screen.skill_name.text = skill.title
@@ -254,7 +223,8 @@ class ProjectZApp(App):
 
     def build(self):
         students, classes = self.get_students()
-        self.root = Root(students, classes, self.get_skills())
+        skills, skill_sets = self.get_skills()
+        self.root = Root(students, classes, skills, skill_sets)
         return self.root
 
     def get_students(self):
@@ -272,7 +242,15 @@ class ProjectZApp(App):
 
     def get_skills(self):
         data = self.skills_data
-        return [Skill(id_, **data[id_]) for id_ in data]
+        skills = [Skill(id_, **data[id_]) for id_ in data]
+        temp_list, skill_sets = [], []
+        for s in skills:
+            if s.skill_set_obj.set_name in temp_list:
+                pass
+            else:
+                temp_list.append(s.skill_set_obj.set_name)
+                skill_sets.append(s.skill_set_obj)
+        return skills, skill_sets
 
     def export_data(self, i=0):
         self.root.start_screen.display_header.clear_widgets()
