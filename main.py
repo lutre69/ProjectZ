@@ -4,6 +4,7 @@ from kivy.properties import ObjectProperty, StringProperty, ListProperty
 from kivy.storage.jsonstore import JsonStore
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.screenmanager import Screen
 from kivy.uix.dropdown import DropDown
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
@@ -40,6 +41,7 @@ class Student:
         self.surname = kwargs.get('surname')
         self.class_ = kwargs.get('class')
         self.class_obj = Class(class_=self.class_)
+        self.skills_dict = {}
 
 
 class ConfirmPopup(GridLayout):
@@ -93,9 +95,106 @@ class DropButton(Button):
     pass
 
 
-class Root(BoxLayout):
+class SkillLabel(BoxLayout):
+    pass
+
+
+class StartScreen(Screen):
+    root_obj = ObjectProperty()
+
+    def open_class_popup(self):
+        root = self.root_obj
+        args = {'item': root.selected_class, 'item_list': root.class_list,
+                'attribute': 'class_', 'callback': self.select_class,
+                'title': 'Choisissez une classe', 'size_hint_y': 0.3}
+        return root.open_choice_popup(**args)
+
+    def select_class(self, a_class):
+        self.active_class_label.text = "{}".format(a_class.class_)
+        self.root_obj.selected_class = a_class
+
+    def open_skill_set_popup(self):
+        args = {'item': self.root_obj.selected_skill_set,
+                'item_list': self.root_obj.skill_set_list,
+                'attribute': 'set_name',
+                'callback': self.select_skill_set,
+                'title': 'Choisissez un jeu de compétences',
+                'size_hint_y': 0.3}
+        return self.root_obj.open_choice_popup(**args)
+
+    def select_skill_set(self, a_set):
+        self.active_skill_set_label.text = "{}".format(a_set.set_name)
+        self.root_obj.selected_skill_set = a_set
+
+
+class SkillsScreen(Screen):
+    root_obj = ObjectProperty()
     selected_student = ObjectProperty()
     selected_skill = ObjectProperty()
+    student_review = ObjectProperty(GridLayout())
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.bind(selected_student=self.display_stud_skills)
+        self.bind(selected_skill=self.display_stud_skills)
+
+    def open_student_popup(self):
+        args = {'item': self.selected_student,
+                'item_list': self.root_obj.active_students,
+                'attribute': 'surname',
+                'callback': self.select_student,
+                'title': 'Choisissez un élève',
+                'size_hint_y': 1}
+        return self.root_obj.open_choice_popup(**args)
+
+    def select_student(self, student):
+        self.student_name.text = "{} {}".format(student.surname,
+                                                student.name)
+        self.selected_student = student
+
+    def open_skills_popup(self):
+        args = {'item': self.selected_skill,
+                'item_list': self.root_obj.active_skills,
+                'attribute': 'title',
+                'callback': self.select_skill,
+                'title': 'Choisissez une compétence',
+                'size_hint_y': 0.4}
+        return self.root_obj.open_choice_popup(**args)
+
+    def select_skill(self, skill):
+        self.skill_name.text = skill.title
+        self.skill_summary.text = skill.summary
+        self.selected_skill = skill
+
+    def display_stud_skills(self, instance, item):
+        try:
+            assert self.selected_student and self.selected_skill
+            self.student_review.add_widget(Label(text='caca',
+                                                 size_hint_y=.8))
+        except AssertionError:
+            pass
+
+
+class BehaviourScreen(Screen):
+    root_obj = ObjectProperty()
+    selected_student = ObjectProperty()
+
+    def open_student_popup(self):
+        args = {'item': self.selected_student,
+                'item_list': self.root_obj.active_students,
+                'attribute': 'surname',
+                'callback': self.select_student,
+                'title': 'Choisissez un élève',
+                'size_hint_y': 1}
+        return self.root_obj.open_choice_popup(**args)
+
+    def select_student(self, student):
+        self.student_name.text = "{} {}".format(student.surname,
+                                                student.name)
+        self.selected_student = student
+
+
+class Root(BoxLayout):
     _selected_class = ObjectProperty()
     _selected_skill_set = ObjectProperty()
     active_students = ListProperty()
@@ -157,58 +256,6 @@ class Root(BoxLayout):
         self.choice_popup = Popup(title=title, content=content,
                                   size_hint_y=size_hint_y, auto_dismiss=False)
         self.choice_popup.open()
-
-    def open_class_popup(self):
-        return self.open_choice_popup(item=self.selected_class,
-                                      item_list=self.class_list,
-                                      attribute='class_',
-                                      callback=self.select_class,
-                                      title='Choisissez une classe',
-                                      size_hint_y=0.3)
-
-    def open_skill_set_popup(self):
-        return self.open_choice_popup(item=self.selected_skill_set,
-                                      item_list=self.skill_set_list,
-                                      attribute='set_name',
-                                      callback=self.select_skill_set,
-                                      title='Choisissez un jeu de compétences',
-                                      size_hint_y=0.3)
-
-    def open_student_popup(self):
-        return self.open_choice_popup(item=self.selected_student,
-                                      item_list=self.active_students,
-                                      attribute='surname',
-                                      callback=self.select_student,
-                                      title='Choisissez un élève',
-                                      size_hint_y=1)
-
-    def open_skills_popup(self):
-        return self.open_choice_popup(item=self.selected_skill,
-                                      item_list=self.active_skills,
-                                      attribute='title',
-                                      callback=self.select_skill,
-                                      title='Choisissez une compétence',
-                                      size_hint_y=0.4)
-
-    def select_class(self, a_class):
-        self.start_screen.active_class_label.text = "{}".format(a_class.class_)
-        self.selected_class = a_class
-
-    def select_skill_set(self, a_set):
-        self.start_screen.active_skill_set_label.text = "{}".format(a_set.set_name)
-        self.selected_skill_set = a_set
-
-    def select_student(self, student):
-        self.skills_screen.student_name.text = "{} {}".format(student.surname,
-                                                              student.name)
-        self.behaviour_screen.student_name.text = "{} {}".format(student.surname,
-                                                                 student.name)
-        self.selected_student = student
-
-    def select_skill(self, skill):
-        self.skills_screen.skill_name.text = skill.title
-        self.skills_screen.skill_summary.text = skill.summary
-        self.selected_skill = skill
 
     def clear_display_label(self):
         self.start_screen.display_label.clear_widgets()
@@ -283,8 +330,8 @@ class ProjectZApp(App):
 
     def pre_set_student_skill(self, value):
         try:
-            skill = self.root.selected_skill.title
-            student = self.root.selected_student
+            skill = self.root.skills_screen.selected_skill.title
+            student = self.root.skills_screen.selected_student
             content = ConfirmPopup(text="Confirmez la note:\n\n{} {}\n\n"
                                         "{} {}".format(
                                          skill, value, student.surname,
@@ -353,7 +400,7 @@ class ProjectZApp(App):
 
     def pre_set_student_disobedience(self, value):
         try:
-            student = self.root.selected_student
+            student = self.root.behaviour_screen.selected_student
             content = ConfirmPopup(text="Confirmez la sanction:\n\n{}\n\n"
                                         "{} {}".format(
                                          value, student.surname,

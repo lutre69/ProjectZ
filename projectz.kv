@@ -39,6 +39,16 @@
 			on_release: root.dispatch('on_answer', 'no')
 
 
+<SkillLabel>:
+    orientation: 'vertical'
+    BoxLayout:
+        id: title
+        size_hint_y: .2
+    GridLayout:
+        id: summary
+        size_hint_y: .8
+
+
 <ChoicePopup>:
     cols: 2
 
@@ -84,18 +94,21 @@
         id: screen_manager_id
         StartScreen:
             id: start_screen_id
+            root_obj: root
             name: "Accueil"
 
         SkillsScreen:
             id: skills_screen_id
+            root_obj: root
             name: "Evaluation"
 
         BehaviourScreen:
             id: behaviour_screen_id
+            root_obj: root
             name: "Comportement"
 
 
-<StartScreen@Screen>:
+<StartScreen>:
     display_label: display_label_id
     display_header: display_header_id
     active_class_label: active_class_label_id
@@ -115,11 +128,11 @@
             StandardButton:
                 id: active_class_label_id
                 text: ""
-                on_release: app.root.open_class_popup()
+                on_release: root.open_class_popup()
             StandardButton:
                 id: active_skill_set_label_id
                 text: ""
-                on_release: app.root.open_skill_set_popup()
+                on_release: root.open_skill_set_popup()
             StandardButton:
                 text: "afficher evaluations"
                 on_release: app.display_skills()
@@ -141,10 +154,11 @@
                     id: display_label_id
 
 
-<SkillsScreen@Screen>:
+<SkillsScreen>:
     student_name: student_name_id
     skill_name: skill_name_id
     skill_summary: skill_summary_id
+    student_review: student_review_id
     padding: "1dp", "1dp"
     BoxLayout:
         orientation: "vertical"
@@ -152,19 +166,23 @@
         EvalSelectable:
             id: student_name_id
             text: "Eleve"
-            on_release: app.root.open_student_popup()
+            on_release: root.open_student_popup()
         EvalSelectable:
             id: skill_name_id
             text: "Competence"
-            on_release: app.root.open_skills_popup()
+            on_release: root.open_skills_popup()
         Label:
             id: skill_summary_id
             padding: "10dp", 0
             text: ""
             color: 1, 1, 1, 1
-            font_size: '17sp'
+            font_size: '12sp'
             valign: 'top'
             text_size: self.size
+            size_hint_y: .5
+        SkillLabel:
+            id: student_review_id
+            size_hint_y: .5
         BoxLayout:
             size_hint_y: None
             height: (self.width - 5 * self.spacing) / 4
@@ -205,14 +223,14 @@
                 on_release: app.pre_set_student_skill(2)
 
 
-<BehaviourScreen@Screen>:
+<BehaviourScreen>:
     student_name: student_name_id
     padding: '1dp', '1dp'
     EvalSelectable:
         pos_hint: {'center_x': .5, 'top': 1}
         id: student_name_id
         text: "Eleve"
-        on_release: app.root.open_student_popup()
+        on_release: root.open_student_popup()
 
     BoxLayout:
         orientation: 'vertical'
