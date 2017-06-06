@@ -1,5 +1,6 @@
 #:kivy 1.9.1
-
+#:import StartScreen screens
+#:import MenuButton widgets
 
 <StandardButton@Button>:
     size_hint_x: None
@@ -109,6 +110,7 @@
 
 
 <StartScreen>:
+    app_obj: app
     display_label: display_label_id
     display_header: display_header_id
     active_class_label: active_class_label_id
@@ -135,10 +137,10 @@
                 on_release: root.open_skill_set_popup()
             StandardButton:
                 text: "afficher evaluations"
-                on_release: app.display_skills()
+                on_release: root.display_skills()
             StandardButton:
                 text: "afficher comportements"
-                on_release: app.display_behaviour()
+                on_release: root.display_behaviour()
             StandardButton:
                 text: "exporter les donnees"
                 on_release: app.export_data()
@@ -155,6 +157,7 @@
 
 
 <SkillsScreen>:
+    app_obj: app
     student_name: student_name_id
     skill_name: skill_name_id
     skill_summary: skill_summary_id
@@ -196,7 +199,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_very_dissatisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.pre_set_student_skill(-2)
+                on_release: root.pre_set_student_skill(-2)
             Button:
                 canvas:
                     Rectangle:
@@ -204,7 +207,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_dissatisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.pre_set_student_skill(-1)
+                on_release: root.pre_set_student_skill(-1)
             Button:
                 canvas:
                     Rectangle:
@@ -212,7 +215,7 @@
                         pos: self.pos
                         source: "images/ic_sentiment_satisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.pre_set_student_skill(1)
+                on_release: root.pre_set_student_skill(1)
             Button:
                 canvas:
                     Rectangle:
@@ -220,10 +223,11 @@
                         pos: self.pos
                         source: "images/ic_sentiment_very_satisfied_black_24dp.png"
                 background_color: 1, 1, 1, 0.6
-                on_release: app.pre_set_student_skill(2)
+                on_release: root.pre_set_student_skill(2)
 
 
 <BehaviourScreen>:
+    app_obj: app
     student_name: student_name_id
     padding: '1dp', '1dp'
     EvalSelectable:
